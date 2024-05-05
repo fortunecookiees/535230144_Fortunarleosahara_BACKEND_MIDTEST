@@ -17,7 +17,7 @@ async function login(request, response, next) {
   const { email, password } = request.body;
 
   try {
-    let userAttempts = failedAttempts.get(email) || {
+    let userAttempts = failedAttempts.get(email) || { //untuk menghitung failed login attempt dari email
       attempts: 0,
       lastAttemptTime: 0,
     };
@@ -46,7 +46,7 @@ async function login(request, response, next) {
     }
 
     failedAttempts.delete(email);
-    
+
     return response.status(200).json(loginSuccess);
   } catch (error) {
     return next(error);

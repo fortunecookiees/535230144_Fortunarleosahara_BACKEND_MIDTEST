@@ -11,24 +11,24 @@ async function getUsers({
   sort = 'email:asc',
   search = null,
 }) {
-  page_number = parseInt(page_number);
-  page_size = parseInt(page_size);
+  page_number = parseInt(page_number); //untuk dirubah menjadi angka integer
+  page_size = parseInt(page_size); 
   if (!page_size || page_size <= 0) {
     page_size = null;
   }
-  let [sortField, sortOrder] = sort.split(':');
+  let [sortField, sortOrder] = sort.split(':'); //split untuk memisahkan string sort menjadi dua bagian
   if (!['email', 'name'].includes(sortField)) {
     sortField = 'email';
   }
   sortOrder = sortOrder.toLowerCase();
-  if (!['asc', 'desc'].includes(sortOrder)) {
+  if (!['asc', 'desc'].includes(sortOrder)) { //untuk memastikan kebenaran sorting nilainya asc atau desc
     sortOrder = 'asc';
   }
   let searchField = null;
   let searchKey = null;
   if (search) {
     const parts = search.split(':');
-    if (parts.length === 2 && ['email', 'name'].includes(parts[0])) {
+    if (parts.length === 2 && ['email', 'name'].includes(parts[0])) { //validasi format search sesuai kriteria
       searchField = parts[0];
       searchKey = parts[1];
     }
