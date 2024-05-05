@@ -5,21 +5,74 @@ const { hashPassword, passwordMatched } = require('../../../utils/password');
  * Get list of users
  * @returns {Array}
  */
-async function getUsers() {
-  const users = await usersRepository.getUsers();
+async function getUsers({
+  page_number = 1,
+  page_size = null,
+  sort = 'email:asc',
+  search = null,
+}) {
+  page_number = parseInt(page_number);
+  page_size = parseInt(page_size);
+  if (!page_size || page_size <= 0) {
+    page_size = null;
+  }
+  let [sortField, sortOrder] = sort.split(':');
+  if (!['email', 'name'].includes(sortField)) {
+    sortField = 'email';
+  }
+  sortOrder = sortOrder.toLowerCase();
+  if (!['asc', 'desc'].includes(sortOrder)) {
+    sortOrder = 'asc';
+  }
+  let searchField = null;
+  let searchKey = null;
+  if (search) {
+    const parts = search.split(':');
+    if (parts.length === 2 && ['email', 'name'].includes(parts[0])) {
+      searchField = parts[0];
+      searchKey = parts[1];
+    }
+  }
 
-  const results = [];
-  for (let i = 0; i < users.length; i += 1) {
-    const user = users[i];
-    results.push({
+  const users = await usersRepository.getUsers();
+  let filteredUsers = users;
+  if (searchField && searchKey) {
+    const searchRegex = new RegExp(searchKey, 'i');
+    filteredUsers = users.filter((user) => searchRegex.test(user[searchField]));
+  }
+
+  filteredUsers.sort((a, b) => {
+    const aValue = a[sortField];
+    const bValue = b[sortField];
+    if (sortOrder === 'asc') {
+      return aValue.localeCompare(bValue);
+    } else {
+      return bValue.localeCompare(aValue);
+    }
+  });
+
+  let startIndex = (page_number - 1) * page_size;
+  let endIndex = startIndex + page_size;
+  if (!page_size) {
+    startIndex = 0;
+    endIndex = filteredUsers.length;
+  }
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+  return {
+    page_number,
+    page_size: page_size || filteredUsers.length,
+    count: paginatedUsers.length,
+    total_pages: page_size ? Math.ceil(filteredUsers.length / page_size) : 1,
+    has_previous_page: page_number > 1,
+    has_next_page: endIndex < filteredUsers.length,
+    data: paginatedUsers.map((user) => ({
       id: user.id,
       name: user.name,
       email: user.email,
-    });
-  }
-
-  return results;
+    })),
+  };
 }
+
 
 /**
  * Get user detail
